@@ -1,34 +1,21 @@
 var session = null;
 
-function ScanForCastApi()
-{
-        var loadCastInterval = setInterval(
-        function()
-        {
-                if (chrome.cast.isAvailable)
-                {
-                        console.log("Chromecast API is available.");
-                        clearInterval(loadCastInterval);
-
-                        InitializeCastApi();
-                }
-                else
-                {
-                        console.log("Chromecast API is not available.");
-                }
-        }, 1000);
-};
+var APP_ID = "DDCF8DA1";
+var NAMESPACE = "urn:x-cast:com.puzzud.projects.chromecastapp";
 
 function InitializeCastApi()
 {
-        var applicationId = chrome.cast.media.DEFAULT_MEDIA_RECEIVER_APP_ID;
+        var applicationId = APP_ID;
+
         var sessionRequest = new chrome.cast.SessionRequest(applicationId);
-        var apiConfig = new chrome.cast.ApiConfig(sessionRequest, ChromeCastSessionListener, ChromecastReceiverListener);
+        var apiConfig = new chrome.cast.ApiConfig(sessionRequest, ChromecastSessionListener, ChromecastReceiverListener);
         
         chrome.cast.initialize(apiConfig, OnChromecastApiInitSuccess, OnChromecastApiInitError);
 };
 
-function ChromeCastSessionListener(s)
+window.__onGCastApiAvailable = InitializeCastApi;
+
+function ChromecastSessionListener(s)
 {
         console.log("Chromecast session listener initialized.");
         
@@ -38,8 +25,28 @@ function ChromeCastSessionListener(s)
         {
                 console.log('Found ' + session.media.length + ' sessions.');
         }
+
+        session.addUpdateListener(ChromecastSessionUpdateListener);
+        session.addMessageListener(NAMESPACE, OnChromecastRecieverMessage);
 }
- 
+
+function ChromecastSessionUpdateListener(isAlive)
+{
+        var message = isAlive ? 'Session Updated' : 'Session Removed';
+        message += ': ' + session.sessionId;
+        console.log(message);
+
+        if (!isAlive)
+        {
+          session = null;
+        }
+}
+
+function OnChromecastRecieverMessage(namespace, message)
+{
+        console.log("receiverMessage: " + namespace + ", " + message);
+}
+
 function ChromecastReceiverListener(e)
 {
         console.log("Chromecast receiver listener initialized.");
@@ -56,7 +63,7 @@ function ChromecastReceiverListener(e)
 
 function OnChromecastApiInitSuccess()
 {
-        console.log("Initialization succeeded");
+        console.log("Initialization succeeded.");
 
         // Create form with buttons to cast.
         InitializeChromecastUi();
@@ -64,7 +71,7 @@ function OnChromecastApiInitSuccess()
 
 function OnChromecastApiInitError()
 {
-        console.log("Initialization failed");
+        console.log("Initialization failed.");
 }
 
 function InitializeChromecastUi()
@@ -149,37 +156,7 @@ function OnRequestSessionSuccess(s)
         console.log("Created Chromecast session with ID: " + s.sessionId);
         session = s;
 
-        ChromecastLoadMedia();
-
         SetUpButtonForCast(false);
-}
-
-function ChromecastLoadMedia()
-{
-        if (session === null)
-        {
-                // NOTE: This situation should not happen.
-                console.error("No session found to load media.");
-                return;
-        }
-
-        var mediaInfo = new chrome.cast.media.MediaInfo("http://i.imgur.com/IFD14.jpg");
-        mediaInfo.contentType = "image/jpg";
-  
-        var mediaLoadRequest = new chrome.cast.media.LoadRequest(mediaInfo);
-        mediaLoadRequest.autoplay = false;
-
-        session.loadMedia(mediaLoadRequest, OnChromecastMediaLoadSuccess, OnChromecastMediaLoadError);
-}
-
-function OnChromecastMediaLoadSuccess()
-{
-        console.log("Successfully loaded image.");
-}
-
-function OnChromecastMediaLoadError()
-{
-        console.log("Failed to load image.");
 }
 
 function StopChromecastSession()

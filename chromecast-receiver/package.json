@@ -17,6 +17,7 @@
   },
   "homepage": "https://github.com/puzzud/chromecast-app#readme",
   "dependencies": {
-    "phaser": "^2.6.2"
+    "phaser": "^2.6.2",
+    "pixi.js": "^4.6.2"
   }
 }
