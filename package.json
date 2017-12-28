@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/puzzud/chromecast-app/issues"
   },
-  "homepage": "https://github.com/puzzud/chromecast-app#readme"
+  "homepage": "https://github.com/puzzud/chromecast-app#readme",
+  "dependencies": {
+    "phaser": "^2.6.2"
+  }
 }
