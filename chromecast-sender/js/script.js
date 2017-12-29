@@ -82,9 +82,9 @@ function InitializeChromecastUi()
 
         var form = document.createElement("form");
 
+        // Cast button.
         var castButton = document.createElement("button");
         castButton.setAttribute("id", "cast");
-        castButton.innerHTML = "Cast";
 
         castButton.onclick =
         function()
@@ -96,10 +96,37 @@ function InitializeChromecastUi()
 
         form.appendChild(castButton);
 
+        // Send message button.
+        var sendButton = document.createElement("button");
+        sendButton.setAttribute("id", "sendMessage");
+        sendButton.innerHTML = "Send Message";
+
+        sendButton.onclick =
+        function()
+        {
+                SendMessage();
+
+                return false;
+        };
+
+        form.appendChild(sendButton);
+
+        // Add form to body and initialize buttons.
         document.body.appendChild(form);
 
         SetUpButtonForCast(true);
 }
+
+var SendMessage = function()
+{
+  if (gameManagerClient === null)
+  {
+    return;
+  }
+
+  var message = {type: 0};
+  gameManagerClient.sendGameMessage(message);
+};
 
 function SetUpButtonForCast(enableCast)
 {

@@ -63,7 +63,8 @@ SpriteDemoGame = function(gameManager)
   this.container_ = new PIXI.Container();
 
   /** @private {!PIXI.WebGLRenderer} */
-  this.renderer_ = new PIXI.WebGLRenderer(this.canvasWidth_, this.canvasHeight_);
+  //this.renderer_ = new PIXI.WebGLRenderer(this.canvasWidth_, this.canvasHeight_);
+  this.renderer_ = new PIXI.CanvasRenderer(this.canvasWidth_, this.canvasHeight_);
 
   /** @private {!PIXI.loaders.Loader} */
   this.loader_ = new PIXI.loaders.Loader();
@@ -283,9 +284,9 @@ SpriteDemoGame.prototype.onGameMessage_ = function(event)
     return;
   }
   var message = /** @type {!cast.games.spritedemo.SpritedemoMessage} */ (event.requestExtraMessageData);
-  var SpritedemoMessageType = cast.games.spritedemo.SpritedemoMessageType;
+  //var SpritedemoMessageType = cast.games.spritedemo.SpritedemoMessageType;
 
-  if (message.type == SpritedemoMessageType.SPRITE)
+  if (message.type === 0)
   {
     if (this.numberSpritesAdded_ <
         SpriteDemoGame.MAX_NUM_SPRITES)
