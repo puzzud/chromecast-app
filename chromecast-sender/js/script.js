@@ -1,4 +1,5 @@
 var session = null;
+var gameManagerClient = null;
 
 var APP_ID = "DDCF8DA1";
 var NAMESPACE = "urn:x-cast:com.puzzud.projects.chromecastapp";
@@ -25,9 +26,6 @@ function ChromecastSessionListener(s)
         {
                 console.log('Found ' + session.media.length + ' sessions.');
         }
-
-        session.addUpdateListener(ChromecastSessionUpdateListener);
-        session.addMessageListener(NAMESPACE, OnChromecastRecieverMessage);
 }
 
 function ChromecastSessionUpdateListener(isAlive)
@@ -155,6 +153,29 @@ function OnRequestSessionSuccess(s)
 {
         console.log("Created Chromecast session with ID: " + s.sessionId);
         session = s;
+
+        chrome.cast.games.GameManagerClient.getInstanceFor
+        (
+                session,
+                function(result)
+                {
+                        console.log('### Game manager client initialized!');
+                        gameManagerClient = result.gameManagerClient;
+                        //cast.games.common.sender.debugGameManagerClient(gameManagerClient);
+
+                        console.log('### Sending AVAILABLE message.');
+                        gameManagerClient.sendPlayerAvailableRequest(null, null, null);
+                },
+                function(error)
+                {
+                        console.error('### Error initializing the game manager client: ' +
+                        error.errorDescription + ' ' +
+                        'Error code: ' + error.errorCode);
+                }
+        );
+
+        session.addUpdateListener(ChromecastSessionUpdateListener);
+        session.addMessageListener(NAMESPACE, OnChromecastRecieverMessage);
 
         SetUpButtonForCast(false);
 }
