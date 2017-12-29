@@ -1,131 +1,67 @@
-//'use strict';
-
-/**
- * Sprite Demo game.
- *
- * Adds a sprite from a pool of sprites when a sender sends a custom game
- * message. Automatically transitions AVAILABLE players to the PLAYING state.
- *
- * @param {!cast.receiver.games.GameManager} gameManager
- * @constructor
- * @implements {cast.games.common.receiver.Game}
- * @export
- */
 SpriteDemoGame = function(gameManager)
 {
-  /** @private {!cast.receiver.games.GameManager} */
   this.gameManager_ = gameManager;
 
   /**
    * Debug only. Call debugUi.open() or close() to show and hide an overlay
    * showing game manager and player information while testing and debugging.
-   * @public {cast.receiver.games.debug.DebugUI}
    */
   //this.debugUi = new cast.receiver.games.debug.DebugUI(this.gameManager_);
 
-  /** @private {number} */
   this.canvasWidth_ = window.innerWidth;
-
-  /** @private {number} */
   this.canvasHeight_ = window.innerHeight;
-
-  /** @private {Array} */
   this.sprites_ = [];
-
-  /** @private {Array} */
   this.spriteVelocities_ = [];
-
-  /** @private {number} */
   this.numberSpritesAdded_ = 0;
-
-  /** @private {number} */
   this.backgroundPosition_ = 0;
-
-  /** @private {PIXI.Sprite} */
   this.background_ = null;
 
-  /**
-   * Background wrap-around texture to fake a infinite scrolling effect.
-   * @private {PIXI.Sprite}
-   */
+  // Background wrap-around texture to fake a infinite scrolling effect.
   this.backgroundWrap_ = null;
 
-  /** @private {function(number)} Pre-bound call to #update. */
+  // Pre-bound call to #update.
   this.boundUpdateFunction_ = this.update_.bind(this);
-
-  /** @private {boolean} */
+  
   this.isLoaded_ = false;
-
-  /** @private {boolean} */
   this.isRunning_ = false;
-
-  /** @private {!PIXI.Container} */
+  
   this.container_ = new PIXI.Container();
-
-  /** @private {!PIXI.WebGLRenderer} */
+  
   //this.renderer_ = new PIXI.WebGLRenderer(this.canvasWidth_, this.canvasHeight_);
   this.renderer_ = new PIXI.CanvasRenderer(this.canvasWidth_, this.canvasHeight_);
 
-  /** @private {!PIXI.loaders.Loader} */
   this.loader_ = new PIXI.loaders.Loader();
   this.loader_.add('assets/icon.png');
   this.loader_.add('assets/background.jpg');
   this.loader_.once('complete', this.onAssetsLoaded_.bind(this));
 
-  /** @private {?function()} Callback used with #run. */
+  // Callback used with #run.
   this.loadedCallback_ = null;
 
-  /**
-   * Pre-bound custom message callback.
-   * @private {function(cast.receiver.games.Event)}
-   */
+  // Pre-bound custom message callback.
   this.boundGameMessageCallback_ = this.onGameMessage_.bind(this);
 
-  /**
-   * Pre-bound player connect callback.
-   * @private {function(cast.receiver.games.Event)}
-   */
+  // Pre-bound player connect callback.
   this.boundPlayerAvailableCallback_ = this.onPlayerAvailable_.bind(this);
 
-  /**
-   * Pre-bound player quit callback.
-   * @private {function(cast.receiver.games.Event)}
-   */
+  // Pre-bound player quit callback.
   this.boundPlayerQuitCallback_ = this.onPlayerQuit_.bind(this);
 };
 
-
-/**
- * Max number of sprites allowed on screen.
- * {number}
- */
+// Max number of sprites allowed on screen.
 SpriteDemoGame.MAX_NUM_SPRITES = 200;
 
-
-/**
- * Default scale of sprites.
- * {number}
- */
+// Default scale of sprites.
 SpriteDemoGame.SCALE = 1;
 
-
-/**
- * @param {number} min
- * @param {number} max
- * @return {number} Returns a random integer between min and max.
- */
 SpriteDemoGame.getRandomInt = function(min, max)
 {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 };
 
-
-/**
- * Runs the game. Game should load if not loaded yet.
- * @param {function()} loadedCallback This function will be called when the game
- *     finishes loading or is already loaded and about to actually run.
- * @export
- */
+// Runs the game. Game should load if not loaded yet.
+// loadedCallback This function will be called when the game
+// finishes loading or is already loaded and about to actually run.
 SpriteDemoGame.prototype.run = function(loadedCallback)
 {
   // If the game is already running, return immediately.
@@ -147,11 +83,7 @@ SpriteDemoGame.prototype.run = function(loadedCallback)
   this.start_();
 };
 
-
-/**
- * Stops the game.
- * @export
- */
+// Stops the game.
 SpriteDemoGame.prototype.stop = function()
 {
   if (this.loadedCallback_ || !this.isRunning_)
@@ -169,11 +101,7 @@ SpriteDemoGame.prototype.stop = function()
   this.gameManager_.removeEventListener(cast.receiver.games.EventType.PLAYER_DROPPED, this.boundPlayerQuitCallback_);
 };
 
-
-/**
- * Adds the renderer and run the game. Calls loaded callback passed to #run.
- * @private
- */
+// Adds the renderer and run the game. Calls loaded callback passed to #run.
 SpriteDemoGame.prototype.start_ = function()
 {
   // If callback is null, the game was stopped already.
@@ -196,11 +124,7 @@ SpriteDemoGame.prototype.start_ = function()
   this.gameManager_.addEventListener(cast.receiver.games.EventType.PLAYER_DROPPED, this.boundPlayerQuitCallback_);
 };
 
-
-/**
- * Called when all assets are loaded.
- * @private
- */
+// Called when all assets are loaded.
 SpriteDemoGame.prototype.onAssetsLoaded_ = function()
 {
   this.background_ = PIXI.Sprite.fromImage('assets/background.jpg');
@@ -224,12 +148,7 @@ SpriteDemoGame.prototype.onAssetsLoaded_ = function()
   this.start_();
 };
 
-
-/**
- * Handles when a player becomes available to the game manager.
- * @param {cast.receiver.games.Event} event
- * @private
- */
+// Handles when a player becomes available to the game manager.
 SpriteDemoGame.prototype.onPlayerAvailable_ = function(event)
 {
   if (event.statusCode != cast.receiver.games.StatusCode.SUCCESS)
@@ -238,18 +157,14 @@ SpriteDemoGame.prototype.onPlayerAvailable_ = function(event)
     console.log('Reason for error: ' + event.errorDescription);
     return;
   }
-  var playerId = /** @type {string} */ (event.playerInfo.playerId);
+  
+  var playerId = event.playerInfo.playerId;
+  
   // Automatically transition available players to playing state.
-  this.gameManager_.updatePlayerState(playerId,
-      cast.receiver.games.PlayerState.PLAYING, null);
+  this.gameManager_.updatePlayerState(playerId, cast.receiver.games.PlayerState.PLAYING, null);
 };
 
-
-/**
- * Handles when a player disconnects from the game manager.
- * @param {cast.receiver.games.Event} event
- * @private
- */
+// Handles when a player disconnects from the game manager.
 SpriteDemoGame.prototype.onPlayerQuit_ = function(event)
 {
   if (event.statusCode != cast.receiver.games.StatusCode.SUCCESS)
@@ -269,12 +184,7 @@ SpriteDemoGame.prototype.onPlayerQuit_ = function(event)
   }
 };
 
-
-/**
- * Callback for game message sent via game manager.
- * @param {cast.receiver.games.Event} event
- * @private
- */
+// Callback for game message sent via game manager.
 SpriteDemoGame.prototype.onGameMessage_ = function(event)
 {
   if (event.statusCode != cast.receiver.games.StatusCode.SUCCESS)
@@ -283,8 +193,8 @@ SpriteDemoGame.prototype.onGameMessage_ = function(event)
     console.log('Reason for error: ' + event.errorDescription);
     return;
   }
-  var message = /** @type {!cast.games.spritedemo.SpritedemoMessage} */ (event.requestExtraMessageData);
-  //var SpritedemoMessageType = cast.games.spritedemo.SpritedemoMessageType;
+  
+  var message = event.requestExtraMessageData;
 
   if (message.type === 0)
   {
@@ -306,12 +216,7 @@ SpriteDemoGame.prototype.onGameMessage_ = function(event)
   }
 };
 
-
-/**
- * Updates the game on each animation frame.
- * @param {number} timestamp
- * @private
- */
+// Updates the game on each animation frame.
 SpriteDemoGame.prototype.update_ = function(timestamp)
 {
   if (!this.isRunning_)
@@ -387,15 +292,10 @@ var game = null;
 
 function OnMessage(event)
 {
-  //document.body.event.message.type
   document.write(event.message.type);
 }
 
-/**
- * Main entry point. This is not meant to be compiled so suppressing missing
- * goog.require checks.
- */
-
+// Main entry point.
 var initialize = function()
 {
   var APP_ID = "DDCF8DA1";
