@@ -282,8 +282,7 @@ SpriteDemoGame.prototype.onGameMessage_ = function(event)
     console.log('Reason for error: ' + event.errorDescription);
     return;
   }
-  var message = /** @type {!cast.games.spritedemo.SpritedemoMessage} */ (
-      event.requestExtraMessageData);
+  var message = /** @type {!cast.games.spritedemo.SpritedemoMessage} */ (event.requestExtraMessageData);
   var SpritedemoMessageType = cast.games.spritedemo.SpritedemoMessageType;
 
   if (message.type == SpritedemoMessageType.SPRITE)
@@ -395,33 +394,66 @@ function OnMessage(event)
  * Main entry point. This is not meant to be compiled so suppressing missing
  * goog.require checks.
  */
-/*
+
 var initialize = function()
 {
   var APP_ID = "DDCF8DA1";
-  var NAMESPACE = "chromecast-app";
+  var NAMESPACE = "urn:x-cast:com.puzzud.projects.chromecastapp";
   
-  var receiver = new cast.receiver.Receiver(APP_ID, [NAMESPACE], "", 5);
-  
-  //var channelHandler = new cast.receiver.ChannelHandler(NAMESPACE);
-  //channelHandler.addChannelFactory(receiver.createChannelFactory(NAMESPACE));
-  
-  receiver.start();
-  
-  //channelHandler.addEventListener(cast.receiver.Channel.EventType.MESSAGE, OnMessage);
-  
+  cast.receiver.logger.setLevelValue(0);
   
   var castReceiverManager = cast.receiver.CastReceiverManager.getInstance();
-  var appConfig = new cast.receiver.CastReceiverManager.Config();
-
-  appConfig.statusText = 'Spritedemo';
-  // In production, use the default maxInactivity instead of using this.
-  appConfig.maxInactivity = 6000;
+  
+  console.log("Starting Receiver Manager");
+  
+  // handler for the 'ready' event
+  castReceiverManager.onReady = function(event)
+  {
+    console.log("Received Ready event: " + JSON.stringify(event.data));
+    castReceiverManager.setApplicationState("Application status is ready...");
+  };
+  
+  // handler for 'senderconnected' event
+  castReceiverManager.onSenderConnected = function(event)
+  {
+    console.log("Received Sender Connected event: " + event.data);
+    console.log(castReceiverManager.getSender(event.data).userAgent);
+  };
+  
+  // handler for 'senderdisconnected' event
+  castReceiverManager.onSenderDisconnected = function(event)
+  {
+    console.log("Received Sender Disconnected event: " + event.data);
+    if (castReceiverManager.getSenders().length == 0)
+    {
+      window.close();
+    }
+  };
+  
+  // handler for 'systemvolumechanged' event
+  castReceiverManager.onSystemVolumeChanged = function(event)
+  {
+    console.log("Received System Volume Changed event: " + event.data["level"] + ' ' + event.data["muted"]);
+  };
+  
+  // create a CastMessageBus to handle messages for a custom namespace
+  window.messageBus = castReceiverManager.getCastMessageBus(NAMESPACE);
+  
+  // handler for the CastMessageBus message event
+  window.messageBus.onMessage = function(event)
+  {
+    console.log("Message [" + event.senderId + "]: " + event.data);
+    // display the message from the sender
+    displayText(event.data);
+    // inform all senders on the CastMessageBus of the incoming message event
+    // sender message listener will be invoked
+    window.messageBus.send(event.senderId, event.data);
+  }
 
   // Create the game before starting castReceiverManager to make sure any extra
   // cast namespaces can be set up.
   var gameConfig = new cast.receiver.games.GameManagerConfig();
-  gameConfig.applicationName = 'Spritedemo';
+  gameConfig.applicationName = "Sprite Demo";
   gameConfig.maxPlayers = 10;
 
   var gameManager = new cast.receiver.games.GameManager(gameConfig);
@@ -430,16 +462,19 @@ var initialize = function()
 
   var startGame = function()
   {
-    game.run(function()
-    {
-      console.log('Game running.');
-      gameManager.updateGameStatusText('Game running.');
-    });
+    game.run
+    (
+      function()
+      {
+        console.log("Game running.");
+        gameManager.updateGameStatusText("Game running.");
+      }
+    );
   };
 
   castReceiverManager.onReady = function(event)
   {
-    if (document.readyState === 'complete')
+    if (document.readyState === "complete")
     {
       startGame();
     }
@@ -448,62 +483,17 @@ var initialize = function()
       window.onload = startGame;
     }
   };
+  
+  // initialize the CastReceiverManager with an application status message
+  var appConfig = new cast.receiver.CastReceiverManager.Config();
+  appConfig.statusText = "Sprite Demo";
+  appConfig.maxInactivity = 6000; // In production, use the default maxInactivity instead of using this.
   castReceiverManager.start(appConfig);
   
-};
-*/
-
-var initialize = function()
-{
-  cast.receiver.logger.setLevelValue(0);
-  window.castReceiverManager = cast.receiver.CastReceiverManager.getInstance();
-  console.log('Starting Receiver Manager');
-  // handler for the 'ready' event
-  castReceiverManager.onReady = function(event) {
-    console.log('Received Ready event: ' + JSON.stringify(event.data));
-    window.castReceiverManager.setApplicationState('Application status is ready...');
-  };
-  // handler for 'senderconnected' event
-  castReceiverManager.onSenderConnected = function(event) {
-    console.log('Received Sender Connected event: ' + event.data);
-    console.log(window.castReceiverManager.getSender(event.data).userAgent);
-  };
-  // handler for 'senderdisconnected' event
-  castReceiverManager.onSenderDisconnected = function(event) {
-    console.log('Received Sender Disconnected event: ' + event.data);
-    if (window.castReceiverManager.getSenders().length == 0) {
-      window.close();
-    }
-  };
-  // handler for 'systemvolumechanged' event
-  castReceiverManager.onSystemVolumeChanged = function(event) {
-    console.log('Received System Volume Changed event: ' + event.data['level'] + ' ' +
-        event.data['muted']);
-  };
-  // create a CastMessageBus to handle messages for a custom namespace
-  var NAMESPACE = "urn:x-cast:com.puzzud.projects.chromecastapp";
-  window.messageBus = window.castReceiverManager.getCastMessageBus(NAMESPACE);
-  // handler for the CastMessageBus message event
-  window.messageBus.onMessage = function(event) {
-    console.log('Message [' + event.senderId + ']: ' + event.data);
-    // display the message from the sender
-    displayText(event.data);
-    // inform all senders on the CastMessageBus of the incoming message event
-    // sender message listener will be invoked
-    window.messageBus.send(event.senderId, event.data);
-  }
-  // initialize the CastReceiverManager with an application status message
-  window.castReceiverManager.start({statusText: 'Application is starting'});
-  console.log('Receiver Manager started');
-};
-// utility function to display the text message in the input field
-function displayText(text) {
-  console.log(text);
-  document.getElementById('message').innerText = text;
-  window.castReceiverManager.setApplicationState(text);
+  console.log("Receiver Manager started");
 };
 
-if (document.readyState === 'complete')
+if (document.readyState === "complete")
 {
   initialize();
 }
